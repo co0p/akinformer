@@ -1,0 +1,5 @@
+cron:
+- description: send new job offers
+  url: /sendNewJobOffers
+  target: beta
+  schedule: every 12 hours
