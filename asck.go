@@ -19,18 +19,18 @@ type Offer struct {
 	StartDate time.Time
 }
 
-var offersURL = "http://www.aerztekammer-berlin.de/10arzt/15_Weiterbildung/17WB-Stellenboerse/index.html"
+var offersURL = "https://www.aerztekammer-berlin.de/10arzt/15_Weiterbildung/17WB-Stellenboerse/index.html"
 
 func init() {
 	http.HandleFunc("/", handler)
-	http.HandleFunc("/sendNewJobOffers", sendNewJobOffers)
+	http.HandleFunc("/offers", offersHandler)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello, world!")
 }
 
-func sendNewJobOffers(w http.ResponseWriter, r *http.Request) {
+func offersHandler(w http.ResponseWriter, r *http.Request) {
 
 	offers, err := extractJobOffers(r)
 	if err != nil {
@@ -41,7 +41,6 @@ func sendNewJobOffers(w http.ResponseWriter, r *http.Request) {
 	log.Printf("extracted a few bits:%v", offers)
 
 	w.WriteHeader(http.StatusNoContent)
-	w.Write([]byte("204 - Send the job offers into the void"))
 }
 
 func extractJobOffers(r *http.Request) ([]Offer, error) {
@@ -52,15 +51,21 @@ func extractJobOffers(r *http.Request) ([]Offer, error) {
 	if err != nil {
 		return nil, errors.New("Failed connecting to the offer page: " + err.Error())
 	}
+	log.Println("connected.")
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.New("Failed reading body from the response: " + err.Error())
 	}
+	defer resp.Body.Close()
+	log.Println("read data.")
 
-	if len(body) != 0 {
+	html := string(body)
+	if len(html) != 0 {
 		return nil, errors.New("No characters were read from the response: " + err.Error())
 	}
+
+	log.Println("read data.")
 
 	return []Offer{}, nil
 }
