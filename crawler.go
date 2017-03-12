@@ -1,12 +1,14 @@
 package asck
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 
 	"golang.org/x/net/context"
+	"golang.org/x/net/html"
 	"google.golang.org/appengine/urlfetch"
 )
 
@@ -42,12 +44,18 @@ func (c *Crawler) Run() ([]Offer, error) {
 	}
 	log.Println("read data.")
 
-	html := string(body)
-	if len(html) == 0 {
-		return nil, errors.New("No characters were read from the response: " + err.Error())
-	}
+	z := html.NewTokenizer(bytes.NewReader(body))
+	for {
+		tt := z.Next()
+		if tt == html.ErrorToken {
+			log.Println("EXIT TOKENIZER")
+			break
+		}
 
-	log.Println("read data.")
+		if name, _ := z.TagName(); "h3" == string(name) {
+			log.Println("Found h3")
+		}
+	}
 
 	return []Offer{}, nil
 }
