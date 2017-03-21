@@ -2,60 +2,52 @@ package asck
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
+	"time"
 
+	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/context"
-	"golang.org/x/net/html"
 	"google.golang.org/appengine/urlfetch"
 )
 
 // Crawler is responsible for crawling
 type Crawler struct {
-	ctx context.Context
-	url string
+	ctx           context.Context
+	url, selector string
 }
 
 // Run does the actual crawling and returns a bunch of extracted offers
 func (c *Crawler) Run() ([]Offer, error) {
 
-	// fetch url
-
-	// convert data to xml
-
-	// extract tokens and construct offers
-
-	// return offers
-	fmt.Printf("starting to crawl '%T' for entries", c.url)
 	client := urlfetch.Client(c.ctx)
 	resp, err := client.Get(c.url)
-	defer resp.Body.Close()
 
 	if err != nil {
-		return nil, errors.New("Failed connecting to the offer page: " + err.Error())
+		return nil, fmt.Errorf("Failed connecting to the offer page: %v", err.Error())
 	}
-	log.Println("connected.")
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, errors.New("Failed reading body from the response: " + err.Error())
+		return nil, fmt.Errorf("Failed reading body from the response: %v", err.Error())
 	}
-	log.Println("read data.")
+	defer resp.Body.Close()
 
-	z := html.NewTokenizer(bytes.NewReader(body))
-	for {
-		tt := z.Next()
-		if tt == html.ErrorToken {
-			log.Println("EXIT TOKENIZER")
-			break
-		}
-
-		if name, _ := z.TagName(); "h3" == string(name) {
-			log.Println("Found h3")
-		}
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(body))
+	if err != nil {
+		return nil, fmt.Errorf("Failed parsing body into html document: %v", err.Error())
 	}
 
-	return []Offer{}, nil
+	offers := []Offer{}
+	doc.Find("h3 > a[name=\"Weiterbildungsstellenangebote\"]").Parent().SiblingsFiltered("table").Last().Find("tr").Each(func(i int, s *goquery.Selection) {
+		// TODO: STILL BROKEN SELECTOR
+		text := s.Find("td").Text()
+		address := s.Find("td").Text()
+		date := s.Find("td").Text()
+
+		newOffer := Offer{text: text, address: address, offerDate: date, dateFound: time.Now()}
+		offers = append(offers, newOffer)
+	})
+
+	return offers, nil
 }

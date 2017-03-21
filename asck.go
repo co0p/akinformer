@@ -11,14 +11,20 @@ import (
 
 // Configuration contains the configuration for the application in one place
 type Configuration struct {
-	url, email string
+	url, email, selector string
 }
 
 // Offer represents an offer found online
 type Offer struct {
-	ID            string
-	text, address string
-	dateFound     time.Time
+	ID                       string
+	text, address, offerDate string
+	dateFound                time.Time
+}
+
+func (a *Offer) compareTo(b Offer) bool {
+	return a.text == b.text &&
+		a.address == b.address &&
+		a.dateFound == b.dateFound
 }
 
 var config Configuration
@@ -29,8 +35,9 @@ var sender *Sender
 func init() {
 
 	config = Configuration{
-		url:   "https://www.aerztekammer-berlin.de/10arzt/15_Weiterbildung/17WB-Stellenboerse/index.html",
-		email: "julian.godesa@googlemail.com",
+		url:      "https://www.aerztekammer-berlin.de/10arzt/15_Weiterbildung/17WB-Stellenboerse/index.html",
+		email:    "julian.godesa@googlemail.com",
+		selector: "a[name=\"Weiterbildungsstellenangebote\"]",
 	}
 
 	http.HandleFunc("/update", offersHandler)
