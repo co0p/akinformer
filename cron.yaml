@@ -2,4 +2,4 @@ cron:
 - description: send new job offers
   url: /update
   target: beta
-  schedule: every 12 hours
+  schedule: every 24 hours
