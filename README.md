@@ -5,7 +5,5 @@ crawling the aerzte kammer job offer for fun and playing with google app engine
 
 how it works
 -----------
-Parse website
-extract offers
-send new offers
-repeat in 24h
+Parse website -> extract offers -> send new offers -> repeat every 24h
+

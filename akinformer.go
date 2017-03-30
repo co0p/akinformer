@@ -14,6 +14,8 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 
+	"strconv"
+
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/mail"
@@ -65,6 +67,14 @@ func init() {
 func handler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 
+	daysBack := 2
+	daysBack, err := strconv.Atoi(r.URL.Query().Get("daysBack"))
+	if err != nil || daysBack < 2 || daysBack > 31 {
+		log.Errorf(c, "failed to convert daysBack query, using default (%d)", daysBack)
+	}
+
+	beforeDate := time.Now().AddDate(0, 0, -1*daysBack)
+
 	offers, err := parseURL(c, url, selector)
 	if err != nil {
 		log.Errorf(c, "failed fetching offers: %v", err)
@@ -72,7 +82,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nSend, err := sendNewOffers(c, offers, email, time.Now().AddDate(0, 0, -2))
+	nSend, err := sendNewOffers(c, offers, email, beforeDate)
 	if err != nil {
 		log.Errorf(c, "failed sending new offers: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
