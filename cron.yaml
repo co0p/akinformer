@@ -3,3 +3,4 @@ cron:
   url: /update
   target: beta
   schedule: every 24 hours
+  login: admin
