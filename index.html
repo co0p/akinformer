@@ -1,0 +1,31 @@
+<html>
+
+<head>
+    <title>AKInformer</title>
+</head>
+
+<body style="width: 500px; margin: 0 auto; margin-top: 20px;">
+    <h1>Ärzte-Kammer Informer</h1>
+    <p>This service informs you about new job offers (Weiterbildungsangebote) on the
+        <a href="https://www.aerztekammer-berlin.de/10arzt/15_Weiterbildung/17WB-Stellenboerse/index.html">Ärzte-Kammer Website</a>        
+        via email. We check every hour, so you don't have to check yourself.
+    </p>
+
+    <p>
+        <h3>Subscribe</h3>
+        <p>You will receive a confirmation email. We will not use your email address for any other purpose 
+            than to inform you about new job offers.</p>
+        <form method="POST" action="/api/subscribe">
+            <input type="email">
+            <input type="submit" value="subscribe">
+    </p>
+
+    <p>
+        <h3>Unsubscribe</h3>
+        <p>You got your job? Simple click on the 'unsubscribe' link in the mail you got from us. 
+            Or send a mail to <a href="mailto:julian.godesa@gmail.com">admin</a>.
+        </p>
+    </p>
+</body>
+
+</html>

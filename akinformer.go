@@ -35,9 +35,7 @@ Added: %v
 =========
 %s
 ---------
-%s 
-
-`
+%s`
 )
 
 // Offer represents an offer found on the website
@@ -59,7 +57,9 @@ func (o Offer) String() string {
 
 // init is the entry point for this app engine app; no main !
 func init() {
-	http.HandleFunc("/update", handler)
+	http.HandleFunc("/api/check", handler)
+	http.HandleFunc("/api/subscribe", subscribeHandler)
+	http.HandleFunc("/api/unsubscribe", unsubscribeHandler)
 	http.Handle("/", http.NotFoundHandler())
 }
 
@@ -156,4 +156,14 @@ func sendMail(c context.Context, offer Offer, address string) error {
 		return err
 	}
 	return nil
+}
+
+func subscribeHandler(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "Not implemented yet", http.StatusInternalServerError)
+	return
+}
+
+func unsubscribeHandler(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "Not implemented yet", http.StatusInternalServerError)
+	return
 }
