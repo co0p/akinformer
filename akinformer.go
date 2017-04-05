@@ -17,7 +17,6 @@ import (
 	"strconv"
 
 	"google.golang.org/appengine"
-	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/mail"
 	"google.golang.org/appengine/urlfetch"
 )
@@ -66,25 +65,26 @@ func init() {
 // handler is triggereing the actual action and will be called every one in a while
 func handler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
+	log := LoggerWithContext(c)
 
 	daysBack := 2
 	daysBack, err := strconv.Atoi(r.URL.Query().Get("daysBack"))
 	if err != nil || daysBack < 2 || daysBack > 31 {
-		log.Errorf(c, "failed to convert daysBack query, using default (%d)", daysBack)
+		log.Errorf("failed to convert daysBack query, using default (%d)", daysBack)
 	}
 
 	beforeDate := time.Now().AddDate(0, 0, -1*daysBack)
 
 	offers, err := parseURL(c, url, selector)
 	if err != nil {
-		log.Errorf(c, "failed fetching offers: %v", err)
+		log.Errorf("failed fetching offers: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	nSend, err := sendNewOffers(c, offers, email, beforeDate)
 	if err != nil {
-		log.Errorf(c, "failed sending new offers: %v", err)
+		log.Errorf("failed sending new offers: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -94,6 +94,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func parseURL(c context.Context, url string, selector string) ([]Offer, error) {
+	log := LoggerWithContext(c)
 	client := urlfetch.Client(c)
 	resp, err := client.Get(url)
 	offers := []Offer{}
@@ -119,7 +120,7 @@ func parseURL(c context.Context, url string, selector string) ([]Offer, error) {
 		dateCreated := s.Find("td:nth-child(3)").Text()
 		t, err := time.Parse("02.01.06", dateCreated)
 		if err != nil {
-			log.Errorf(c, "Failed parsing date of item %d, continue ...", i)
+			log.Errorf("Failed parsing date of item %d, continue ...", i)
 			return
 		}
 
@@ -131,13 +132,15 @@ func parseURL(c context.Context, url string, selector string) ([]Offer, error) {
 }
 
 func sendNewOffers(c context.Context, offers []Offer, address string, timestamp time.Time) (int, error) {
+	log := LoggerWithContext(c)
+
 	nSend := 0
 	for _, offer := range offers {
 		if offer.DateCreated.After(timestamp) {
 			if err := sendMail(c, offer, address); err != nil {
-				log.Errorf(c, "failed sending offer mail: %v", err)
+				log.Errorf("failed sending offer mail: %v", err)
 			}
-			log.Infof(c, "Successful send email: \n%s", offer)
+			log.Infof("Successful send email: \n%s", offer)
 			nSend++
 		}
 	}

@@ -5,5 +5,21 @@ crawling the aerzte kammer job offer for fun and playing with google app engine
 
 how it works
 -----------
-Parse website -> extract offers -> send new offers -> repeat every 24h
+ 
+ * parse website extract job offers
+ * calculate checksum and put new/updated offers in db
+ * send emails to subscribers informing them about those offers
+ * repeat every n hour
 
+ development
+ -----------
+
+    cd $GOROOT/src/path/to/project
+    ./dev_appserver.py .
+
+deployment
+----------
+
+    gcloud app deploy
+
+    
