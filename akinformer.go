@@ -14,8 +14,6 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 
-	"strconv"
-
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/mail"
 	"google.golang.org/appengine/urlfetch"
@@ -24,24 +22,25 @@ import (
 const (
 	url            string = "https://www.aerztekammer-berlin.de/10arzt/15_Weiterbildung/17WB-Stellenboerse/index.html"
 	email                 = "julian.godesa@googlemail.com"
-	selector              = "#table4:nth-last-child(1) tr"
+	selector              = ".tAngebot tr.job"
 	confirmMessage string = `
 We have found a new job offer for you!
 
 go to: %s !
 
 Added: %v
-=========
+============================
 %s
----------
+----------------------------
+%s
+----------------------------
 %s`
 )
 
 // Offer represents an offer found on the website
 type Offer struct {
-	Description string
-	Address     string
-	DateCreated time.Time
+	Specialization, Description, Address string
+	DateCreated                          time.Time
 }
 
 // String returns a string representation of the offer o
@@ -67,13 +66,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	log := LoggerWithContext(c)
 
-	daysBack := 2
-	daysBack, err := strconv.Atoi(r.URL.Query().Get("daysBack"))
-	if err != nil || daysBack < 2 || daysBack > 31 {
-		log.Errorf("failed to convert daysBack query, using default (%d)", daysBack)
-	}
-
-	beforeDate := time.Now().AddDate(0, 0, -1*daysBack)
+	beforeDate := time.Now().AddDate(0, 0, -1*4)
 
 	offers, err := parseURL(c, url, selector)
 	if err != nil {
@@ -115,16 +108,18 @@ func parseURL(c context.Context, url string, selector string) ([]Offer, error) {
 	}
 
 	doc.Find(selector).Each(func(i int, s *goquery.Selection) {
-		description := s.Find("td:nth-child(1)").Text()
-		address := s.Find("td:nth-child(2)").Text()
-		dateCreated := s.Find("td:nth-child(3)").Text()
-		t, err := time.Parse("02.01.06", dateCreated)
+
+		address := s.Find("td:nth-child(1)").Text()
+		specialization := s.Find("td:nth-child(2)").Text()
+		description := s.Find("td:nth-child(3)").Text()
+		dateCreated := s.Find("td:nth-child(4)").Text()
+		t, err := time.Parse("02.01.2006", strings.TrimSpace(dateCreated))
 		if err != nil {
-			log.Errorf("Failed parsing date of item %d, continue ...", i)
+			log.Errorf("Failed parsing date of item %d, with err: %s! continue ...", i, err)
 			return
 		}
 
-		o := Offer{strings.TrimSpace(description), strings.TrimSpace(address), t}
+		o := Offer{strings.TrimSpace(specialization), strings.TrimSpace(description), strings.TrimSpace(address), t}
 		offers = append(offers, o)
 	})
 
@@ -152,8 +147,8 @@ func sendMail(c context.Context, offer Offer, address string) error {
 	msg := &mail.Message{
 		Sender:  "akinfomer <jobs@asck-158619.appspotmail.com>",
 		To:      []string{address},
-		Subject: "AK-Informer - New Job Offers",
-		Body:    fmt.Sprintf(confirmMessage, url, offer.DateCreated, offer.Address, offer.Description),
+		Subject: "AK-Informer - New Job Offers (" + offer.Specialization + ")",
+		Body:    fmt.Sprintf(confirmMessage, url, offer.Specialization, offer.DateCreated, offer.Address, offer.Description),
 	}
 	if err := mail.Send(c, msg); err != nil {
 		return err

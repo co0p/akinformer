@@ -1,6 +1,9 @@
 package akinformer
 
 import (
+	"fmt"
+	"io"
+
 	"golang.org/x/net/context"
 
 	"os"
@@ -8,15 +11,14 @@ import (
 	gaelog "google.golang.org/appengine/log"
 )
 
-// Logger defines all methods to be implemented of the custom logger
-type Logger interface {
-	Fprintf(v ...interface{})
-}
-
 // Log is the actual logger to be used
 type Log struct {
-	logger Logger
-	ctx    context.Context
+	ctx context.Context
+}
+
+// Fprintf satisifies the Logger interface
+func (l Log) Fprintf(out io.Writer, format string, v ...interface{}) {
+	fmt.Fprintf(out, format, v)
 }
 
 // LoggerWithContext returns a new logger instance with a given context
@@ -29,7 +31,7 @@ func (l Log) Errorf(format string, v ...interface{}) {
 	if l.ctx != nil {
 		gaelog.Errorf(l.ctx, format, v)
 	}
-	l.logger.Fprintf(os.Stderr, format+"\n", v)
+	l.Fprintf(os.Stderr, format+"\n", v)
 }
 
 // Infof writes the info log to the gae log if context is present, stdout otherwise
@@ -37,5 +39,5 @@ func (l Log) Infof(format string, v ...interface{}) {
 	if l.ctx != nil {
 		gaelog.Infof(l.ctx, format, v)
 	}
-	l.logger.Fprintf(os.Stdout, format+"\n", v)
+	l.Fprintf(os.Stdout, format+"\n", v)
 }
