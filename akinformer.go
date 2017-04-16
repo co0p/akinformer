@@ -66,7 +66,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	log := LoggerWithContext(c)
 
-	beforeDate := time.Now().AddDate(0, 0, -1*4)
+	beforeDate := time.Now().AddDate(0, 0, -1)
 
 	offers, err := parseURL(c, url, selector)
 	if err != nil {
