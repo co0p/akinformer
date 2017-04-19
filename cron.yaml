@@ -2,5 +2,5 @@ cron:
 - description: check and send new job offers
   url: /api/check
   target: beta
-  schedule: every 24 hours
+  schedule: every day 23:55
   login: admin
